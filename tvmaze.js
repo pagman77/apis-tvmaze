@@ -82,37 +82,66 @@ $searchForm.on("submit", async function (evt) {
   await searchForShowAndDisplay();
 });
 
+/**Extract season list based on show ID
+ * return {id: number: numEpisodes: image:} */
+async function getSeasonOfShow(show) {
+
+  const result = await axios.get(`${API_URL}/shows/${show}/seasons`);
+
+  const seasons = result.data.map(season => {
+    const id = season.id;
+    const number = season.number;
+    const numEpisodes = season.episodeOrder;
+    const image = season.image?.medium || DEFAULT_IMG;
+
+    return { id, number, numEpisodes, image };
+  });
+  return seasons;
+}
 
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number } */
-async function getEpisodesOfShow(show) {
+async function getEpisodesOfShow(seasons) {
+  let episodesBySeason = [];
 
-  const result = await axios.get(`${API_URL}/shows/${show}/episodes`);
+  for (let season of seasons) {
 
-  const episodes = result.data.map(episode => {
-    const id = episode.id;
-    const name = episode.name;
-    const season = episode.season;
-    const number = episode.number;
-    return { id, name, season, number }
-  });
-
-  return episodes;
+    const result = await axios.get(`${API_URL}/seasons/${season.id}/episodes`);
+    const episodes = result.data.map(episode => {
+      const id = episode.id;
+      const name = episode.name;
+      const number = episode.number;
+      return { id, name, number };
+    });
+    episodesBySeason.push(episodes);
+  }
+  return episodesBySeason;
 }
 
 
-/** Take array of episode objects, and append to DOM */
-function populateEpisodes(episodes) {
+/** Take array of episode objects, and append to DOM
+ * seasons = [{season}, {season}]
+ * episodes = [{season} {seasson}]
+*/
+function populateEpisodes(seasons, episodes) {
   $episodesList.empty();
 
-  for (let episode of episodes) {
-    const $episode = $(`
-      <li id=${episode.id}>
-        ${episode.name} (Season ${episode.season}, Number ${episode.number})
-      </li>
-      `);
-
-    $episodesList.append($episode);
+  for (let season of seasons){
+    let $seasonArea = $(`
+          <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Season ${season.number}
+          </button >
+        </h2 >
+          <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+              <ol id="${season.id}" >EPISODE CONTENT</ol>
+            </div>
+          </div>
+      </div >
+    `)
+    $episodesList.append($seasonArea);
   }
 
   $episodesArea.show();
@@ -121,9 +150,11 @@ function populateEpisodes(episodes) {
 /** Conductor function to get episode data and append to DOM*/
 async function getEpisodesAndDisplay(evt) {
   const showId = $(evt.target).closest(".Show").data("show-id");
-  const episodes = await getEpisodesOfShow(showId);
 
-  populateEpisodes(episodes);
+  const seasons = await getSeasonOfShow(showId);
+  const episodes = await getEpisodesOfShow(seasons); //[{SEASON}, {SEASON}]
+
+  populateEpisodes(seasons, episodes);
 }
 
 
