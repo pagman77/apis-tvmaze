@@ -123,25 +123,38 @@ async function getEpisodesOfShow(seasons) {
  * seasons = [{season}, {season}]
  * episodes = [{season} {seasson}]
 */
-function populateEpisodes(seasons, episodes) {
+function populateEpisodes(episodes) {
   $episodesList.empty();
 
-  for (let season of seasons){
-    let $seasonArea = $(`
+  for (let i = 0; i < episodes.length; i++){
+    let $seasonArea1 = $(`
           <div class="accordion-item">
-        <h2 class="accordion-header" id="headingOne">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-            Season ${season.number}
+        <h2 class="accordion-header" id="heading-${i+1}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${i+1}" aria-expanded="false" aria-controls="collapse-${i+1}">
+            Season ${i+1}
           </button >
         </h2 >
-          <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+          <div id="collapse-${i+1}" class="accordion-collapse collapse" aria-labelledby="heading-${i+1}" data-bs-parent="#episodesList">
             <div class="accordion-body">
-              <ol id="${season.id}" >EPISODE CONTENT</ol>
+              <ol id=episodesList-${i+1}>`);
+
+      $episodesList.append($seasonArea1);
+        for (let episode of episodes[i]){
+          let $seasonTarget = $(`#episodesList-${i+1}`)
+          let $episode = $(`
+              <li id=${episode.id}>
+                ${episode.name}
+              </li>
+          `);
+          $seasonTarget.append($episode);
+        }
+      let $seasonArea2 = $(`
+              </ol>
             </div>
           </div>
-      </div >
+        </div>
     `)
-    $episodesList.append($seasonArea);
+    $episodesList.append($seasonArea2);
   }
 
   $episodesArea.show();
@@ -152,10 +165,11 @@ async function getEpisodesAndDisplay(evt) {
   const showId = $(evt.target).closest(".Show").data("show-id");
 
   const seasons = await getSeasonOfShow(showId);
-  const episodes = await getEpisodesOfShow(seasons); //[{SEASON}, {SEASON}]
+  const episodes = await getEpisodesOfShow(seasons); //[[SEASON] {SEASON}]
 
-  populateEpisodes(seasons, episodes);
+  populateEpisodes(episodes);
 }
 
 
 $showsList.on("click", ".Show-getEpisodes", getEpisodesAndDisplay);
+
