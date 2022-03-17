@@ -52,7 +52,8 @@ function populateShows(shows) {
            <div class="media-body">
              <h5 class="text-primary">${show.name}</h5>
              <div><small>${show.summary}</small></div>
-             <button class="btn btn-outline-light btn-sm Show-getEpisodes">
+             <button class="btn btn-outline-light btn-sm Show-getEpisodes"
+                data-toggle="modal" data-target="#episodeModal">
                Episodes
              </button>
            </div>
@@ -107,24 +108,23 @@ function populateEpisodes(episodes) {
   for (let episode of episodes) {
     const $episode = $(`
       <li id=${episode.id}>
-        ${episode.name} (Season ${episode.season}, Number${episode.number})
+        ${episode.name} (Season ${episode.season}, Number ${episode.number})
       </li>
       `);
 
     $episodesList.append($episode);
   }
+
   $episodesArea.show();
 }
 
 /** Conductor function to get episode data and append to DOM*/
-async function getEpisodesAndDisplay() {
-  const showId = $("#showsList>div").data("showId");
+async function getEpisodesAndDisplay(evt) {
+  const showId = $(evt.target).closest(".Show").data("show-id");
   const episodes = await getEpisodesOfShow(showId);
 
   populateEpisodes(episodes);
 }
 
 
-$showsList.on("click", $("<button>"), async function () {
-  await getEpisodesAndDisplay();
-});
+$showsList.on("click", ".Show-getEpisodes", getEpisodesAndDisplay);
