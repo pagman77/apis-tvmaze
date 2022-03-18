@@ -4,7 +4,7 @@ const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $episodesList = $("#episodesList");
 const $searchForm = $("#searchForm");
-const API_URL = "http://api.tvmaze.com";
+const API_URL = "https://api.tvmaze.com";
 const DEFAULT_IMG = "https://tinyurl.com/tv-missing";
 
 
@@ -19,10 +19,8 @@ const DEFAULT_IMG = "https://tinyurl.com/tv-missing";
  * [{id:, name:, summary:, image:}] */
 async function getShowsByTerm(searchTerm) {
 
-  const apiExt = "/search/shows/";
-
   const result = await axios.get(
-    API_URL + apiExt, { params: { q: searchTerm } });
+    `${API_URL}/search/shows/`, { params: { q: searchTerm } });
 
   const shows = result.data.map(program => {
     const id = program.show.id;
